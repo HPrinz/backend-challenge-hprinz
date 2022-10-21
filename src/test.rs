@@ -16,7 +16,7 @@ fn test_parse_organizations() {
 
     let organization_list_string = r#"{
         "success": true,
-        "other_attribute": "should be ignored"
+        "other_attribute": "should be ignored",
         "result": [{
             "display_name": "Amt für X",
             "package_count": 7,
@@ -26,8 +26,7 @@ fn test_parse_organizations() {
             "display_name": "Amt für Y",
             "package_count": 273846,
             "title": "Amt für Y"
-        }
-        ]
+        }]
     }"#;
 
     let organizations_response = parse_organizations(organization_list_string);
