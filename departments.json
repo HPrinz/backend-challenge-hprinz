@@ -1,0 +1,110 @@
+{
+  "departments": [
+    {
+      "name": "Auswärtiges Amt"
+    },
+    {
+      "name": "Bundesministerium der Justiz",
+      "subordinates": [
+        {
+          "name": "Deutsches Patent- und Markenamt"
+        },
+        {
+          "name": "Bundesamt für Justiz"
+        }
+      ]
+    },
+    {
+      "name": "Bundesministerium der Finanzen",
+      "subordinates": [
+        {
+          "name": "Bundeszentralamt für Steuern"
+        },
+        {
+          "name": "Generalzolldirektion"
+        },
+        {
+          "name": "ITZ-Bund"
+        }
+      ]
+    },
+    {
+      "name": "Bundesministerium der Verteidigung"
+    },
+    {
+      "name": "Bundesministerium des Innern",
+      "subordinates": [
+        {
+          "name": "Bundesinstitut für Bau-, Stadt- und Raumforschung (BBSR) im Bundesamt für Bauwesen und Raumordnung (BBR)"
+        },
+        {
+          "name": "Bundesausgleichsamt"
+        },
+        {
+          "name": "Bundesverwaltungsamt"
+        },
+        {
+          "name": "Statistisches Bundesamt"
+        }
+      ]
+    },
+    {
+      "name": "Bundesministerium für Arbeit und Soziales",
+      "subordinates": [
+        {
+          "name": "Bundesanstalt für Arbeitsschutz und Arbeitsmedizin "
+        }
+      ]
+    },
+    {
+      "name": "Bundesministerium für Bildung und Forschung"
+    },
+    {
+      "name": "Bundesministerium für Familie, Senioren, Frauen und Jugend"
+    },
+    {
+      "name": "Bundesministerium für wirtschaftliche Zusammenarbeit und Entwicklung"
+    },
+    {
+      "name": "Bundesministerium für Wirtschaft und Energie",
+      "subordinates": [
+        {
+          "name": "Bundesamt für Wirtschaft und Ausfuhrkontrolle"
+        },
+        {
+          "name": "Bundesanstalt für Materialforschung und -prüfung "
+        }
+      ]
+    },
+    {
+      "name": "Bundesministerium für Ernährung und Landwirtschaft",
+      "subordinates": [
+        {
+          "name": "Bundesamt für Verbraucherschutz und Lebensmittelsicherheit"
+        },
+        {
+          "name": "Bundessortenamt"
+        },
+        {
+          "name": "Max Rubner-Institut"
+        }
+      ]
+    },
+    {
+      "name": "Bundesministerium für Gesundheit",
+      "subordinates": [
+        {
+          "name": "Bundesamt für Soziale Sicherung"
+        }
+      ]
+    },
+    {
+      "name": "Bundesministerium für Verkehr und digitale Infrastruktur",
+      "subordinates": [
+        {
+          "name": "mCLOUD"
+        }
+      ]
+    }
+  ]
+}

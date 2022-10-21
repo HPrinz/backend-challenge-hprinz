@@ -2,19 +2,18 @@
 
 use rocket::serde::{Deserialize,Serialize};
 
-#[derive(Serialize, Deserialize)]
+#[derive(Default, Debug, Clone, Serialize, Deserialize)]
 #[serde(crate = "rocket::serde")]
 pub struct OrganizationsListResponse{
     pub success: bool,
     pub result: Vec<Organization>
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Default, Debug, Clone, Serialize, Deserialize)]
 #[serde(crate = "rocket::serde")]
 pub struct Organization{
-    pub display_name: String,
-    pub package_count: i32,
-    pub title: String
+    pub title: String,
+    pub package_count: i32
 }
 
 #[derive(Serialize, Deserialize)]
@@ -27,7 +26,7 @@ pub struct Departments{
 #[serde(crate = "rocket::serde")]
 pub struct Department{
     pub name: String,
-    pub subordinates: Option<Vec<String>>
+    pub subordinates: Option<Vec<Subordinate>>
 }
 
 #[derive(Serialize, Deserialize)]

@@ -33,13 +33,10 @@ fn test_parse_organizations() {
     assert_eq!(organizations_response.success, true);
 }
 
-
-
 #[test]
 fn test_filter_organizations() {
     let organization_list_string = r#"{
         "success": true,
-        "other_attribute": "should be ignored"
         "result": [{
             "display_name": "Amt für X",
             "package_count": 7,
@@ -53,21 +50,20 @@ fn test_filter_organizations() {
         ]
     }"#;
     let departmnts_list_string = r#"{
-        "departments": [
-        {
+        "departments": [{
             "name": "Amt für X",
-            "subordinates": [
-            {
+            "subordinates": [{
                 "name": "Amt für Y"
-            }
-            ]
-        }"#;
+            }]
+        }]
+    }"#;
 
     
     let organizations_response = parse_organizations(organization_list_string);
     let departments = parse_departments(departmnts_list_string);
-    let organizations_filtered = filter_organizations(organizations_response.result, departments);
-    assert_eq!(organizations_filtered[0].display_name, "Amt für X");
+    assert_eq!(departments.departments[0].name, "Amt für X");
+    let organizations_filtered = filter_organizations(organizations_response.result, &departments.departments);
+    assert_eq!(organizations_filtered["Amt für X"], 273853);
 }
 
 
