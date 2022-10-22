@@ -53,11 +53,11 @@ fn test_process_organization_with_subordinate() {
     let organizations = parse_organizations(r#"{
         "success": true,
         "result": [{
-            "package_count": 7,
+            "package_count": 5,
             "title": "Amt für X"
         },
         {
-            "package_count": 273846,
+            "package_count": 1,
             "title": "Amt für Y"
         }
         ]
@@ -73,10 +73,34 @@ fn test_process_organization_with_subordinate() {
     }"#).departments;
     
     let organizations_filtered = process_organizations(organizations, &departments);
-    assert_eq!(organizations_filtered["Amt für X"], 273853);
+    assert_eq!(organizations_filtered["Amt für X"], 6);
 }
 
 
+
+#[test]
+fn test_process_organization_with_only_subordinate() {
+    let organizations = parse_organizations(r#"{
+        "success": true,
+        "result": [{
+            "package_count": 3,
+            "title": "subordinate with organization"
+        }
+        ]
+    }"#).result;
+
+    let departments = parse_departments(r#"{
+        "departments": [{
+            "name": "department without organization",
+            "subordinates": [{
+                "name": "subordinate with organization"
+            }]
+        }]
+    }"#).departments;
+    
+    let organizations_filtered = process_organizations(organizations, &departments);
+    assert_eq!(organizations_filtered["department without organization"], 3);
+}
 
 #[test]
 fn test_organizations() {
