@@ -12,7 +12,7 @@ pub struct OrganizationsListResponse{
 #[derive(Default, Debug, Clone, Serialize, Deserialize)]
 #[serde(crate = "rocket::serde")]
 pub struct Organization{
-    pub title: String,
+    pub display_name: String,
     pub package_count: i32
 }
 

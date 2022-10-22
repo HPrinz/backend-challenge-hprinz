@@ -19,11 +19,11 @@ fn test_parse_organizations() {
         "other_attribute": "should be ignored",
         "result": [{
             "package_count": 7,
-            "title": "Amt für X"
+            "display_name": "Amt für X"
         },
         {
             "package_count": 273846,
-            "title": "Amt für Y"
+            "display_name": "Amt für Y"
         }]
     }"#;
 
@@ -54,11 +54,11 @@ fn test_process_organization_with_subordinate() {
         "success": true,
         "result": [{
             "package_count": 5,
-            "title": "Amt für X"
+            "display_name": "Amt für X"
         },
         {
             "package_count": 1,
-            "title": "Amt für Y"
+            "display_name": "Amt für Y"
         }
         ]
     }"#).result;
@@ -84,7 +84,7 @@ fn test_process_organization_with_only_subordinate() {
         "success": true,
         "result": [{
             "package_count": 3,
-            "title": "subordinate with organization"
+            "display_name": "subordinate with organization"
         }
         ]
     }"#).result;
@@ -94,6 +94,31 @@ fn test_process_organization_with_only_subordinate() {
             "name": "department without organization",
             "subordinates": [{
                 "name": "subordinate with organization"
+            }]
+        }]
+    }"#).departments;
+    
+    let organizations_filtered = process_organizations(organizations, &departments);
+    assert_eq!(organizations_filtered["department without organization"], 3);
+}
+
+#[test]
+fn test_process_organization_with_missing_subordinate() {
+    let organizations = parse_organizations(r#"{
+        "success": true,
+        "result": [{
+            "package_count": 3,
+            "display_name": "subordinate with organization"
+        }]
+    }"#).result;
+
+    let departments = parse_departments(r#"{
+        "departments": [{
+            "name": "department without organization",
+            "subordinates": [{
+                "name": "subordinate with organization"
+            },{
+                "name": "subordinate without organization"
             }]
         }]
     }"#).departments;

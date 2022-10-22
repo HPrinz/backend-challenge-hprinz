@@ -1,0 +1,2 @@
+[env]
+ORGANIZATIONS_URL = "https://www.govdata.de/ckan/api/3/action/organization_list"

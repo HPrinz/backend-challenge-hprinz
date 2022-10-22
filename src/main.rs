@@ -3,11 +3,13 @@
 mod structs;
 
 use std::collections::HashMap;
+use std::env;
 use std::fs::File;
 use std::io::Read;
 use std::ops::Add;
 
 use reqwest;
+use rocket::log::private::warn;
 use url::Url;
 use rocket::tokio;
 use anyhow::Result;
@@ -19,8 +21,9 @@ fn hello() -> &'static str {
 
 #[get("/")]
 fn organizations() -> String {
+    let url = env::var("ORGANIZATIONS_URL").unwrap();
     let res = tokio::task::block_in_place(|| {
-        return get_organization_list();
+        return get_organization_list(&url);
     });
     let mut file = File::open("departments.json").unwrap();
     let mut data = String::new();
@@ -58,34 +61,36 @@ fn process_organizations(organizations: Vec<structs::Organization>, departments:
     
     let mut all_organizations : HashMap<String, i32> = HashMap::new();
     for org in organizations{
-        all_organizations.insert(org.title, org.package_count);
+        all_organizations.insert(org.display_name, org.package_count);
     }
 
     let mut final_organizations : HashMap<String, i32> = HashMap::new();
     for dep in departments{
         let final_name = &dep.name;
+        final_organizations.insert(final_name.to_string(), 0);
 
-        if all_organizations.contains_key(final_name){
+        if all_organizations.contains_key(final_name) {
             final_organizations.insert(final_name.to_string(), all_organizations[final_name]);
-            
-            for dep_sub in dep.subordinates.iter().flatten() {
+        } else {
+            info!("all_organizations does not contain {}, will use data from subordinates only",final_name)
+        }
+        
+        for dep_sub in dep.subordinates.iter().flatten() {
+            if all_organizations.contains_key(&dep_sub.name) {
                 let new_val = final_organizations[final_name].add(all_organizations[&dep_sub.name]);
                 final_organizations.insert(final_name.to_string(), new_val);
+            } else {
+                warn!("all_organizations is missing subordinate {}", &dep_sub.name)
             }
-        } else {
-            println!("all orgs does not contain {}", final_name);
         }
     }
     
     return final_organizations;
 }
 
-fn get_organization_list() -> Result<structs::OrganizationsListResponse>{
+fn get_organization_list(url : &str) -> Result<structs::OrganizationsListResponse>{
     
-    let uri = Url::parse_with_params("https://www.govdata.de/ckan/api/3/action/organization_list", 
-    &[("all_fields", "true")]);
-    
+    let uri = Url::parse_with_params(url, &[("all_fields", "true")]);
     let result = reqwest::blocking::get(uri?)?;
-
     return Ok(result.json::<structs::OrganizationsListResponse>()?);
 }
