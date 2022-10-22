@@ -14,32 +14,38 @@ use url::Url;
 use rocket::tokio;
 use anyhow::Result;
 
+use rocket_dyn_templates::{Template, context};
+
 #[get("/hello")]
 fn hello() -> &'static str {
    "Hello World!"
 }
 
+/// Returns a HTML with all federal departments and their number of data sets
 #[get("/")]
-fn organizations() -> String {
+fn departments_dashboard() -> Template {
     let url = env::var("ORGANIZATIONS_URL").unwrap();
     let res = tokio::task::block_in_place(|| {
         return get_organization_list(&url);
     });
+ 
     let mut file = File::open("departments.json").unwrap();
     let mut data = String::new();
     file.read_to_string(&mut data).unwrap();
-    
     let departments = parse_departments(&data).departments;
 
-    return process_organizations(res.unwrap().result, &departments).iter()
-    .map(|(k, v)| format!("{}:{}", k, v))
-    .collect::<Vec<String>>()
-    .join(",\n");
+    let departments_with_count = process_organizations(res.unwrap().result, &departments);
+
+    let mut list_vector = departments_with_count.iter().collect::<Vec<(&String, &i32)>>();
+    list_vector.sort_by(|a, b| b.1.cmp(a.1));
+    Template::render("index", context! { departments: list_vector })
 }
 
 #[launch]
 fn rocket() -> _ {
-    rocket::build().mount("/", routes![hello, organizations])
+    rocket::build()
+    .mount("/", routes![hello, departments_dashboard])
+    .attach(Template::fairing())
 }
 
 fn parse_organizations(orgs_string: &str) -> structs::OrganizationsListResponse {

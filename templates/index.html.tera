@@ -1,0 +1,11 @@
+<html>
+  <head></head>
+  <body>
+    <h1>Federal Departments Dashboard</h1>
+    <ul>
+    {% for department in departments %}
+      <li>{{department.0}} : {{department.1}}</li>
+    {% endfor %}
+    </ul>
+  </body>
+</html>
