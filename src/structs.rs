@@ -1,5 +1,3 @@
-	
-
 use rocket::serde::{Deserialize,Serialize};
 
 #[derive(Default, Debug, Clone, Serialize, Deserialize)]
