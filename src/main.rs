@@ -7,10 +7,10 @@ use std::fs::File;
 use std::io::Read;
 use std::ops::Add;
 
-use reqwest::{self};
+use reqwest;
 use url::Url;
 use rocket::tokio;
-use rocket::serde::json::Json;
+use anyhow::Result;
 
 #[get("/hello")]
 fn hello() -> &'static str {
@@ -20,18 +20,18 @@ fn hello() -> &'static str {
 #[get("/")]
 fn organizations() -> String {
     let res = tokio::task::block_in_place(|| {
-        let return_value = get_organization_list("true", "true");
-        return_value
+        return get_organization_list();
     });
     let mut file = File::open("departments.json").unwrap();
     let mut data = String::new();
     file.read_to_string(&mut data).unwrap();
     
-    return filter_organizations(res.result, &parse_departments(&data).departments).iter()
+    let departments = parse_departments(&data).departments;
+
+    return process_organizations(res.unwrap().result, &departments).iter()
     .map(|(k, v)| format!("{}:{}", k, v))
     .collect::<Vec<String>>()
-    .join(",");
-
+    .join(",\n");
 }
 
 #[launch]
@@ -47,39 +47,45 @@ fn parse_departments(departments_string: &str) -> structs::Departments {
     rocket::serde::json::from_str(&departments_string).expect("JSON was not well-formatted")
 }
 
-fn filter_organizations(organizations: Vec<structs::Organization>, departments: &Vec<structs::Department>) -> HashMap<String, i32> {
-    let mut organizations_tmp : HashMap<String, i32> = HashMap::new();
-
+/// Returns a HashMap with all root departments as keys and the sum of package count from department and their subordinates as values
+///
+/// # Arguments
+///
+/// * `organizations` - A list of all organizations retrieved by the ckan API with name and package_count attributes only 
+/// * `departments` - The list of departments with their subordinates to sum the package count from
+///
+fn process_organizations(organizations: Vec<structs::Organization>, departments: &Vec<structs::Department>) -> HashMap<String, i32> {
     
+    let mut all_organizations : HashMap<String, i32> = HashMap::new();
     for org in organizations{
-        organizations_tmp.insert(org.title, org.package_count);
+        all_organizations.insert(org.title, org.package_count);
     }
 
     let mut final_organizations : HashMap<String, i32> = HashMap::new();
-
     for dep in departments{
         let final_name = &dep.name;
-        if organizations_tmp.contains_key(final_name){
-            final_organizations.insert(final_name.to_string(), organizations_tmp[final_name]);
+
+        if all_organizations.contains_key(final_name){
+            final_organizations.insert(final_name.to_string(), all_organizations[final_name]);
+            
             for dep_sub in dep.subordinates.iter().flatten() {
-                let new_val = final_organizations[final_name].add(organizations_tmp[&dep_sub.name]);
+                let new_val = final_organizations[final_name].add(all_organizations[&dep_sub.name]);
                 final_organizations.insert(final_name.to_string(), new_val);
             }
+        } else {
+            println!("all orgs does not contain {}", final_name);
         }
     }
     
     return final_organizations;
 }
 
-// https://www.govdata.de/ckan/api/3/action/organization_list?all_fields=true&include_dataset_count=true&sort=package_count
-fn get_organization_list(all_fields: &'static str, include_dataset_count: &'static str) -> structs::OrganizationsListResponse{
-        
-    let uri = Url::parse_with_params("https://www.govdata.de/ckan/api/3/action/organization_list", 
-    &[("all_fields", all_fields), ("include_dataset_count", include_dataset_count)]);
+fn get_organization_list() -> Result<structs::OrganizationsListResponse>{
     
-    let result = reqwest::blocking::get(uri.unwrap()).unwrap();
+    let uri = Url::parse_with_params("https://www.govdata.de/ckan/api/3/action/organization_list", 
+    &[("all_fields", "true")]);
+    
+    let result = reqwest::blocking::get(uri?)?;
 
-    println!("{:#?}", result);
-
-    return result.json::<structs::OrganizationsListResponse>().unwrap();
+    return Ok(result.json::<structs::OrganizationsListResponse>()?);
 }

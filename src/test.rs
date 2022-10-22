@@ -1,4 +1,4 @@
-use crate::{parse_organizations, filter_organizations, parse_departments};
+use crate::{parse_organizations, process_organizations, parse_departments};
 use super::rocket;
 use rocket::http::Status;
 use rocket::local::blocking::Client;
@@ -18,12 +18,10 @@ fn test_parse_organizations() {
         "success": true,
         "other_attribute": "should be ignored",
         "result": [{
-            "display_name": "Amt für X",
             "package_count": 7,
             "title": "Amt für X"
         },
         {
-            "display_name": "Amt für Y",
             "package_count": 273846,
             "title": "Amt für Y"
         }]
@@ -33,22 +31,9 @@ fn test_parse_organizations() {
     assert_eq!(organizations_response.success, true);
 }
 
+
 #[test]
-fn test_filter_organizations() {
-    let organization_list_string = r#"{
-        "success": true,
-        "result": [{
-            "display_name": "Amt für X",
-            "package_count": 7,
-            "title": "Amt für X"
-        },
-        {
-            "display_name": "Amt für Y",
-            "package_count": 273846,
-            "title": "Amt für Y"
-        }
-        ]
-    }"#;
+fn test_parse_departments() {
     let departmnts_list_string = r#"{
         "departments": [{
             "name": "Amt für X",
@@ -57,14 +42,40 @@ fn test_filter_organizations() {
             }]
         }]
     }"#;
-
     
-    let organizations_response = parse_organizations(organization_list_string);
     let departments = parse_departments(departmnts_list_string);
     assert_eq!(departments.departments[0].name, "Amt für X");
-    let organizations_filtered = filter_organizations(organizations_response.result, &departments.departments);
+    assert!(departments.departments[0].subordinates.is_some());
+}
+
+#[test]
+fn test_process_organization_with_subordinate() {
+    let organizations = parse_organizations(r#"{
+        "success": true,
+        "result": [{
+            "package_count": 7,
+            "title": "Amt für X"
+        },
+        {
+            "package_count": 273846,
+            "title": "Amt für Y"
+        }
+        ]
+    }"#).result;
+
+    let departments = parse_departments(r#"{
+        "departments": [{
+            "name": "Amt für X",
+            "subordinates": [{
+                "name": "Amt für Y"
+            }]
+        }]
+    }"#).departments;
+    
+    let organizations_filtered = process_organizations(organizations, &departments);
     assert_eq!(organizations_filtered["Amt für X"], 273853);
 }
+
 
 
 #[test]
