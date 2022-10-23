@@ -1,5 +1,7 @@
 # Backend Challenge for DigitalService
 
+This is my solution for the [backend challenge of DigitalService](https://github.com/digitalservicebund/backend-challenge), written in Rust language.
+
 ## Run
 
 Prerequisites:
@@ -21,3 +23,11 @@ To run the app
 ## Execute Tests
 
 - run `cargo test`
+
+## Possible improvements
+
+- improve error handling
+    - render error pages instead of causing panics in http controller
+- add tests for unhappy cases (e.g. provoke errors)
+- add html metadata (title, etc.)
+- make dashboard _more_ pretty

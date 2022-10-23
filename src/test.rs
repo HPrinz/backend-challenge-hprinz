@@ -1,14 +1,15 @@
-use crate::{parse_organizations, process_organizations, parse_departments};
+use crate::structs::OrganizationsListResponse;
+use crate::{process_organizations, parse_departments, sort_ministries_by_count};
 use super::rocket;
 use rocket::http::Status;
 use rocket::local::blocking::Client;
+use std::collections::HashMap;
 
 #[test]
-fn test_hello() {
+fn test_organizations() {
     let client = Client::tracked(rocket()).unwrap();
-    let response = client.get("/hello").dispatch();
+    let response = client.get("/").dispatch();
     assert_eq!(response.status(), Status::Ok);
-    assert_eq!(response.into_string(), Some("Hello World!".into()));
 }
 
 #[test]
@@ -27,8 +28,8 @@ fn test_parse_organizations() {
         }]
     }"#;
 
-    let organizations_response = parse_organizations(organization_list_string);
-    assert_eq!(organizations_response.success, true);
+    let parsed_organizations : OrganizationsListResponse = rocket::serde::json::from_str(organization_list_string).unwrap();
+    assert_eq!(parsed_organizations.success, true);
 }
 
 
@@ -50,7 +51,7 @@ fn test_parse_departments() {
 
 #[test]
 fn test_process_organization_with_subordinate() {
-    let organizations = parse_organizations(r#"{
+    let parsed_organizations : OrganizationsListResponse = rocket::serde::json::from_str(r#"{
         "success": true,
         "result": [{
             "package_count": 5,
@@ -61,7 +62,7 @@ fn test_process_organization_with_subordinate() {
             "display_name": "Amt für Y"
         }
         ]
-    }"#).result;
+    }"#).unwrap();
 
     let departments = parse_departments(r#"{
         "departments": [{
@@ -72,7 +73,7 @@ fn test_process_organization_with_subordinate() {
         }]
     }"#).departments;
     
-    let organizations_filtered = process_organizations(organizations, &departments);
+    let organizations_filtered = process_organizations(parsed_organizations.result, &departments);
     assert_eq!(organizations_filtered["Amt für X"], 6);
 }
 
@@ -80,14 +81,14 @@ fn test_process_organization_with_subordinate() {
 
 #[test]
 fn test_process_organization_with_only_subordinate() {
-    let organizations = parse_organizations(r#"{
+    let parsed_organizations : OrganizationsListResponse = rocket::serde::json::from_str(r#"{
         "success": true,
         "result": [{
             "package_count": 3,
             "display_name": "subordinate with organization"
         }
         ]
-    }"#).result;
+    }"#).unwrap();
 
     let departments = parse_departments(r#"{
         "departments": [{
@@ -98,19 +99,19 @@ fn test_process_organization_with_only_subordinate() {
         }]
     }"#).departments;
     
-    let organizations_filtered = process_organizations(organizations, &departments);
+    let organizations_filtered = process_organizations(parsed_organizations.result, &departments);
     assert_eq!(organizations_filtered["department without organization"], 3);
 }
 
 #[test]
 fn test_process_organization_with_missing_subordinate() {
-    let organizations = parse_organizations(r#"{
+    let parsed_organizations : OrganizationsListResponse = rocket::serde::json::from_str(r#"{
         "success": true,
         "result": [{
             "package_count": 3,
             "display_name": "subordinate with organization"
         }]
-    }"#).result;
+    }"#).unwrap();
 
     let departments = parse_departments(r#"{
         "departments": [{
@@ -123,13 +124,19 @@ fn test_process_organization_with_missing_subordinate() {
         }]
     }"#).departments;
     
-    let organizations_filtered = process_organizations(organizations, &departments);
+    let organizations_filtered = process_organizations(parsed_organizations.result, &departments);
     assert_eq!(organizations_filtered["department without organization"], 3);
 }
 
 #[test]
-fn test_organizations() {
-    let client = Client::tracked(rocket()).unwrap();
-    let response = client.get("/").dispatch();
-    assert_eq!(response.status(), Status::Ok);
+fn test_sort_departments() {
+    let mut departments = HashMap::new();
+    departments.insert("Department 1".to_string(), 1);
+    departments.insert("Department 2".to_string(), 3);
+    departments.insert("Department 3".to_string(), 2);
+    
+    let sorted = sort_ministries_by_count(departments);
+    assert_eq!(sorted[0], ("Department 2".to_string(), 3));
+    assert_eq!(sorted[1], ("Department 3".to_string(), 2));
+    assert_eq!(sorted[2], ("Department 1".to_string(), 1));
 }

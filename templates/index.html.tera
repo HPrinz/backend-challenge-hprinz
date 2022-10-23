@@ -2,6 +2,7 @@
   <head></head>
   <body>
     <h1>Federal Departments Dashboard</h1>
+    <p>The following number of data packages has been uploaded to GovData by the federal ministries and their subordinated agencies:</p>
     <ul>
     {% for department in departments %}
       <li>{{department.0}} : {{department.1}}</li>
